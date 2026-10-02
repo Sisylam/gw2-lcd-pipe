@@ -28,6 +28,7 @@ See `docs/PROTOCOL.md` for the full protocol notes, history and open items.
 | `shim/` | Alternative approach: a shim for the legacy `LogiLcd*` API. |
 | `lcdshim.py` | Python shared-memory reader, used only by `shim/test_shim.py`. |
 | `docs/PROTOCOL.md` | Full protocol notes, reverse-engineering history and open items. |
+| `docs/INTEROP.md` | How the protocol was derived (black-box) and the project's legal posture. |
 | `LICENSE`, `THIRD_PARTY_NOTICES.md` | MIT license and third-party attributions. |
 | `third_party/logitech/` | Genuine Logitech DLLs the project depends on. **Not committed** — see its README. |
 | `reference/` | Screenshots of GW2's LCD screens used during analysis. |
@@ -97,6 +98,14 @@ The genuine Logitech software is still required for the stock DLLs and for
 
 [MIT](LICENSE). The Logitech DLLs under `third_party/logitech/` are proprietary,
 are **not** covered by that license, and are excluded from the repository.
+
+## Method and legal
+
+The protocol was derived by **black-box observation** of the public
+`LGLCDPIPE` named-pipe boundary — no decompilation, and no Logitech code or
+symbols were copied. The genuine Logitech DLLs are **not** distributed; you
+supply them from your own Logitech Gaming Software install. This is a hobby /
+personal-use project, not for commercial use. See `docs/INTEROP.md` for details.
 
 ## Disclaimer
 

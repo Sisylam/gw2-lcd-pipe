@@ -15,6 +15,9 @@ monitor, ...).
   answers the pipe exactly as LCore did.
 - The six G19S soft buttons work: `[<]` / `[>]` cycle GW2's LCD views, driven
   from the viewer's on-screen buttons.
+- **Clean-room client DLL works** (`clean/`): GW2 loads our `LgLcdApi.clean.dll`,
+  gets live frames, and all six buttons work - with no Logitech DLL and no
+  server process. This removes the dependency on Logitech software entirely.
 - Next: uninstall LGS and enable/test HVCI.
 
 See `docs/PROTOCOL.md` for the full protocol notes, history and open items.
@@ -24,6 +27,7 @@ See `docs/PROTOCOL.md` for the full protocol notes, history and open items.
 | Path | Role |
 |------|------|
 | `lcdproxy/` | The replacement named-pipe server (`lgpipe_server.c`) and the passive proxy DLL (`lcdproxy.c`) that taps GW2's frames. |
+| `clean/` | **Clean-room client DLL** (`LgLcdApi.clean.dll`): replaces `LgLcdApi.dll` **and** `LCore.exe`. No Logitech binary, no server. See `clean/README.md`. |
 | `viewer/` | **Native Rust viewer** (`gw2lcd-viewer.exe`): shows `Local\GW2LCDShim` and provides the six soft buttons. Replaces the Python viewer. |
 | `shim/` | Alternative approach: a shim for the legacy `LogiLcd*` API. |
 | `lcdshim.py` | Python shared-memory reader, used only by `shim/test_shim.py`. |
@@ -36,8 +40,9 @@ See `docs/PROTOCOL.md` for the full protocol notes, history and open items.
 
 ## Required Logitech files
 
-The project ships **no** Logitech code. Two genuine Logitech DLLs must be
-copied into `third_party/logitech/` (gitignored) before running:
+The project ships **no** Logitech code. The proxy/server path (Option B below)
+needs two genuine Logitech DLLs copied into `third_party/logitech/`
+(gitignored); the **clean-room client DLL (`clean/`) needs none**:
 
 | File (x64) | Why it is needed |
 |------------|------------------|
@@ -74,15 +79,27 @@ Before running the proxy, populate `third_party/logitech/` (see its README).
 
 ## Running
 
-1. Register `lcdproxy\LgLcdApiProxy.dll` for the Logitech LCD CLSID with
+There are two ways to serve GW2's LCD. Both publish to `Local\GW2LCDShim`, so
+the same viewer works with either.
+
+**Option A - clean-room client DLL (no Logitech software).**
+
+1. Register `clean\LgLcdApi.clean.dll` for the Logitech LCD CLSID (elevated;
+   same key as `lcdproxy\registry.ps1`, pointed at the clean DLL). See
+   `clean/README.md`.
+2. Start GW2.
+3. Run `viewer\target\release\gw2lcd-viewer.exe`.
+
+**Option B - proxy + replacement server.**
+
+1. Register `lcdproxy\LgLcdApiProxy.dll` for the CLSID with
    `lcdproxy\registry.ps1` (backup/restore supported).
 2. Start `lgpipe_server4.exe`.
 3. Start GW2. It connects to the server.
-4. Run `viewer\target\release\gw2lcd-viewer.exe` to see the live screen and
-   drive the six soft buttons (`<`, `>`, `ok`, `^`, `v`, `menu`).
+4. Run the viewer.
 
-The genuine Logitech software is still required for the stock DLLs and for
-`LCore.exe` until it is removed.
+Option B still needs the genuine Logitech DLLs in `third_party/logitech/`;
+Option A needs no Logitech software at all.
 
 ## Related projects and sources
 

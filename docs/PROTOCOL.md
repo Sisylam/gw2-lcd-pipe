@@ -582,6 +582,17 @@ other 24 can be success-returning stubs, because GW2 never calls them. The
 public `lglcd.h` (shipped in `mpc-hc`, `MPC-BE`, `mumble`) supplies every
 signature and constant.
 
+Implemented in `clean/` and verified working 2026-10-02 (live frames and all six
+buttons, with no Logitech DLL and no server). Two extra findings from that work:
+
+- After `connect`, GW2 does **not** call `open` until the client delivers a
+  `DEVICE_ARRIVAL` notification through the `onNotify` callback registered in
+  the `lgLcdConnectEx` context (`notifyParm1 = LGLCD_DEVICE_QVGA`). The connect
+  context also carries `dwAppletCapabilitiesSupported = 3` (BW|QVGA), confirming
+  GW2 uses `ConnectEx`.
+- GW2's `onSoftbuttonsChanged` handler misses a press whose release follows
+  immediately; a ~60 ms gap between the press and the release is required.
+
 ## Remaining work
 
 1. ~~Confirm the buttons visually.~~ **DONE 2026-10-02**: all six bits confirmed
@@ -599,10 +610,9 @@ signature and constant.
    string) and enable/test HVCI.
 6. Parallel fallback stack (`main.py`, `mumble.py`, `gw2api.py`, `render.py`)
    still has 404s on `/v2/maps/{id}/poi` and `/v2/maps/{id}/vista`.
-7. **Clean-room client DLL (optional).** A replacement for `LgLcdApi.dll`
-   would drop the Logitech DLL dependency entirely. See the client-API section
-   above: only five functions need real implementations, reusing the existing
-   shim/control code.
+7. ~~Clean-room client DLL.~~ **DONE 2026-10-02**: `clean/` replaces
+   `LgLcdApi.dll` and `LCore.exe`; GW2 shows live frames and all six buttons
+   work with no Logitech software installed.
 
 ## Known protocol gaps
 

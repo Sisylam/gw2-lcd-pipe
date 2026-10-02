@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # Rust viewer crates (font8x8, minifb, raw-window-handle, winapi).
+  - package-ecosystem: cargo
+    directory: /viewer
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # Keep the workflow actions current (checkout, codeql-action).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

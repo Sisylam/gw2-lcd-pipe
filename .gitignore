@@ -27,3 +27,6 @@ target/
 # --- logs, captures, crash dumps ---
 *.log
 *.dmp
+
+# --- opencode session exports (conversation transcripts, not project material) ---
+logitech-g19s-replacement-for-gw2.json

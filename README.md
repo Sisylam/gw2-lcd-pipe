@@ -31,7 +31,7 @@ See `docs/PROTOCOL.md` for the full protocol notes, history and open items.
 | `docs/INTEROP.md` | How the protocol was derived (black-box) and the project's legal posture. |
 | `LICENSE`, `THIRD_PARTY_NOTICES.md` | MIT license and third-party attributions. |
 | `third_party/logitech/` | Genuine Logitech DLLs the project depends on. **Not committed** — see its README. |
-| `reference/` | Screenshots of GW2's LCD screens used during analysis. |
+| `reference/` | GW2 LCD screen renders used during analysis - **unverified provenance**, see `reference/README.md`. |
 | `cache/`, `.env` | Local API cache and secrets. **Not committed.** |
 
 ## Required Logitech files
@@ -84,15 +84,40 @@ Before running the proxy, populate `third_party/logitech/` (see its README).
 The genuine Logitech software is still required for the stock DLLs and for
 `LCore.exe` until it is removed.
 
-## Related projects
+## Related projects and sources
 
+- [`sliekens/gw2sdk`](https://github.com/sliekens/gw2sdk) — Guild Wars 2 SDK.
+  Its [`Logitech-LCD` wiki page](https://github.com/sliekens/gw2sdk/wiki/Logitech-LCD)
+  is the source of the `reference/` screenshots.
+- [`endlessmind/Logitech-G19-display-reverse-engineering`](https://github.com/endlessmind/Logitech-G19-display-reverse-engineering)
+  — reverse engineering of the G19's USB display protocol.
 - [`g19daemon`](https://github.com/mortendynamite/g19daemon) and
   [`G19LCD`](https://github.com/endlessmind/G19LCD) drive the G19 over USB
   directly; neither implements the `LGLCDPIPE` protocol.
 - [`henninglive/logitech-lcd`](https://github.com/henninglive/logitech-lcd)
   wraps the Logitech SDK rather than replacing its server.
+- Discord discussion (GW2 / Logitech LCD):
+  <https://discord.com/channels/384735285197537290/384735523521953792/1114274342734417942>
 - The Logitech LCD SDK and `LCore.exe` from Logitech Gaming Software define the
   behaviour this project reproduces byte for byte.
+
+## Acknowledgements
+
+This project builds on the work of others; none of their code is included:
+
+- **Logitech** — the LCD SDK documents the client API, and `LCore.exe` defines
+  the pipe behaviour emulated here.
+- **[sliekens](https://github.com/sliekens)** (`gw2sdk`) — Guild Wars 2 SDK; the
+  `reference/` screenshots come from his
+  [Logitech-LCD wiki page](https://github.com/sliekens/gw2sdk/wiki/Logitech-LCD).
+- **[endlessmind](https://github.com/endlessmind)** — G19 USB display reverse
+  engineering (`Logitech-G19-display-reverse-engineering`, `G19LCD`).
+- **`g19daemon`**, **`henninglive/logitech-lcd`**, **`zzattack/Logitech-LCD`**,
+  **`theldoria/lg-lcd`**, **`sidewinder94/Logitech-LCD`**, **`linkdata/LCDHost`**
+  — protocol and API references.
+- **`mpc-hc`**, **`MPC-BE`**, **`mumble`** — ship the public `lglcd.h` SDK header.
+
+See `THIRD_PARTY_NOTICES.md` for the full list.
 
 ## License
 

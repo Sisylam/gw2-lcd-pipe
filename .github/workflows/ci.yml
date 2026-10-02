@@ -12,8 +12,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install MinGW (gcc) and cppcheck
-        run: choco install mingw cppcheck --no-progress -y
+      - name: Install MinGW (gcc)
+        run: choco install mingw --no-progress -y
+
+      # Pin cppcheck: the bundled/winlibs one is broken and choco lags behind.
+      - name: Install cppcheck 2.22.0 (pinned)
+        shell: pwsh
+        run: |
+          $msi = "$env:TEMP\cppcheck.msi"
+          Invoke-WebRequest 'https://github.com/danmar/cppcheck/releases/download/2.22.0/cppcheck-2.22.0-x64-Setup.msi' -OutFile $msi
+          Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart" -Wait
 
       - name: Add Rust linter components
         run: rustup component add clippy rustfmt

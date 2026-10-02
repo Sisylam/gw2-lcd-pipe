@@ -59,6 +59,9 @@ They are © Logitech, are **not** covered by this project's license, and must no
 be committed or redistributed. See `third_party/logitech/README.md` for the copy
 commands and provenance.
 
+Keep them in `third_party/logitech/` even after uninstalling Logitech Gaming
+Software, so the stock client/server can be restored if ever needed.
+
 ## Building
 
 Build scripts need MinGW (`C:\w64\bin`) on `PATH`; the viewer needs a Rust
@@ -120,7 +123,9 @@ Option A needs no Logitech software at all.
 
 ## Acknowledgements
 
-This project builds on the work of others; none of their code is included:
+None of this stands alone. Sincere thanks to the people below — no code of
+theirs is included, but their reverse engineering, documentation and reference
+material are what let this project get there:
 
 - **Logitech** — the LCD SDK documents the client API, and `LCore.exe` defines
   the pipe behaviour emulated here.
@@ -134,7 +139,7 @@ This project builds on the work of others; none of their code is included:
   — protocol and API references.
 - **`mpc-hc`**, **`MPC-BE`**, **`mumble`** — ship the public `lglcd.h` SDK header.
 
-See `THIRD_PARTY_NOTICES.md` for the full list.
+Thank you all. See `THIRD_PARTY_NOTICES.md` for the full list.
 
 ## License
 

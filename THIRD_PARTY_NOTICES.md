@@ -27,9 +27,10 @@ crate manifests:
 
 ## Prior work and knowledge
 
-No source code from these projects is included. They informed the
-interoperability work - the documented API surface, protocol knowledge, and the
-reference screenshots - and are credited here.
+No source code from these projects is included. Their reverse engineering,
+documentation and reference material informed the interoperability work - the
+documented API surface, protocol knowledge, and the reference screenshots - and
+this project thanks them for it.
 
 | Project | Contributed |
 |---------|-------------|

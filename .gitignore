@@ -1,0 +1,29 @@
+# --- secrets ---
+.env
+
+# --- python ---
+__pycache__/
+*.pyc
+
+# --- local API cache (account/character/map data) ---
+cache/
+
+# --- proprietary Logitech binaries (see third_party/logitech/README.md) ---
+# These are Logitech's copyrighted files; do not redistribute them.
+third_party/logitech/*.dll
+
+# --- build outputs ---
+# Our own proxy DLLs and server EXEs are build products, not source.
+*.dll
+*.exe
+*.o
+*.obj
+*.pdb
+*.ilk
+
+# --- rust ---
+target/
+
+# --- logs, captures, crash dumps ---
+*.log
+*.dmp

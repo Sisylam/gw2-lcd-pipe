@@ -1,0 +1,11 @@
+# Store LF in the repository and in the working tree, so line endings are
+# identical everywhere and git stops warning about conversions.
+# (PowerShell 5.1 reads LF scripts fine.)
+
+* text=auto eol=lf
+
+# Binaries (never normalised).
+*.png binary
+*.ico binary
+*.dll binary
+*.exe binary

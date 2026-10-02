@@ -1,0 +1,18 @@
+[package]
+name = "gw2lcd-viewer"
+version = "0.1.0"
+edition = "2021"
+description = "Native viewer for the GW2 LCD shim (Local\\GW2LCDShim) with the six G19S soft buttons."
+
+[[bin]]
+name = "gw2lcd-viewer"
+path = "src/main.rs"
+
+[dependencies]
+minifb = "0.27"
+font8x8 = "0.3"
+
+[profile.release]
+opt-level = 2
+lto = true
+strip = true

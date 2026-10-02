@@ -1,5 +1,9 @@
 # GW2 LCD out of LCore
 
+[![CI](https://github.com/Sisylam/gw2-lcd-pipe/actions/workflows/ci.yml/badge.svg)](https://github.com/Sisylam/gw2-lcd-pipe/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Sisylam/gw2-lcd-pipe/actions/workflows/codeql.yml/badge.svg)](https://github.com/Sisylam/gw2-lcd-pipe/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Replace the obsolete `LCore.exe` (Logitech Gaming Software) as the server for
 Guild Wars 2's 320x240 LCD stream, so Microsoft Defender's memory-integrity
 (HVCI) can be enabled. GW2 still renders the LCD; this project speaks the

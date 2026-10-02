@@ -58,9 +58,8 @@ impl Shim {
         if h.is_null() {
             return false;
         }
-        let view = unsafe {
-            win::MapViewOfFile(h, win::FILE_MAP_READ, 0, 0, HDR_SIZE + MAX_PIXELS)
-        } as *mut u8;
+        let view = unsafe { win::MapViewOfFile(h, win::FILE_MAP_READ, 0, 0, HDR_SIZE + MAX_PIXELS) }
+            as *mut u8;
         if view.is_null() {
             unsafe { win::CloseHandle(h) };
             return false;
@@ -111,9 +110,8 @@ fn parse(view: &[u8]) -> Option<Frame> {
     if view.len() < HDR_SIZE {
         return None;
     }
-    let u32_at = |off: usize| {
-        u32::from_le_bytes([view[off], view[off + 1], view[off + 2], view[off + 3]])
-    };
+    let u32_at =
+        |off: usize| u32::from_le_bytes([view[off], view[off + 1], view[off + 2], view[off + 3]]);
     if u32_at(0) != MAGIC || u32_at(4) != VERSION {
         return None;
     }

@@ -150,13 +150,8 @@ fn draw_bar(buf: &mut [u32], buttons: &[Button], mouse: Option<(f32, f32)>) {
 }
 
 fn main() {
-    let mut window = Window::new(
-        "GW2 LCD viewer",
-        W,
-        H,
-        WindowOptions::default(),
-    )
-    .expect("create window");
+    let mut window =
+        Window::new("GW2 LCD viewer", W, H, WindowOptions::default()).expect("create window");
     window.set_target_fps(30);
 
     let buttons = make_buttons();
@@ -178,8 +173,7 @@ fn main() {
                     blit(&mut img, &f);
                     title = format!(
                         "GW2 LCD viewer - {}x{} seq={} init={} text={} upd={}",
-                        f.width, f.height, f.sequence, f.init_count,
-                        f.text_count, f.update_count
+                        f.width, f.height, f.sequence, f.init_count, f.text_count, f.update_count
                     );
                 }
             } else {

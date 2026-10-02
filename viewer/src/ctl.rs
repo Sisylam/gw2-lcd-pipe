@@ -44,9 +44,8 @@ impl Mapping {
         if h.is_null() {
             return None;
         }
-        let view = unsafe {
-            win::MapViewOfFile(h, win::FILE_MAP_ALL_ACCESS, 0, 0, CTL_BYTES)
-        } as *mut u32;
+        let view =
+            unsafe { win::MapViewOfFile(h, win::FILE_MAP_ALL_ACCESS, 0, 0, CTL_BYTES) } as *mut u32;
         if view.is_null() {
             unsafe { win::CloseHandle(h) };
             return None;
@@ -64,9 +63,8 @@ impl Mapping {
 
 /// Post one soft-button request. Returns a short status string.
 pub fn post(button: u32) -> Result<(), String> {
-    let m = Mapping::open().ok_or_else(|| {
-        "Local\\LGLCDCtl not open - is lgpipe_server running?".to_string()
-    })?;
+    let m = Mapping::open()
+        .ok_or_else(|| "Local\\LGLCDCtl not open - is lgpipe_server running?".to_string())?;
     let result = unsafe {
         if *m.view != CTL_MAGIC {
             Err("bad magic in control mapping".to_string())

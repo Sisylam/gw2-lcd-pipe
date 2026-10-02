@@ -116,15 +116,19 @@ int main(int argc, char** argv)
     {
         DWORD n = 4 + 320u * 240u * 4u;
         unsigned char* bmp = (unsigned char*)malloc(n);
-        wr32(bmp, 3);
-        for (i = 0; i < 320 * 240; i++) {
-            bmp[4 + i*4 + 0] = 0x10;   /* B */
-            bmp[4 + i*4 + 1] = 0x20;   /* G */
-            bmp[4 + i*4 + 2] = 0x30;   /* R */
-            bmp[4 + i*4 + 3] = 0xff;   /* A */
+        if (!bmp) {
+            CHECK(0, "malloc for colour frame failed");
+        } else {
+            wr32(bmp, 3);
+            for (i = 0; i < 320 * 240; i++) {
+                bmp[4 + i*4 + 0] = 0x10;   /* B */
+                bmp[4 + i*4 + 1] = 0x20;   /* G */
+                bmp[4 + i*4 + 2] = 0x30;   /* R */
+                bmp[4 + i*4 + 3] = 0xff;   /* A */
+            }
+            CHECK(p_update(dev, bmp, 0x80) == 0, "updateBitmap(colour) -> 0");
+            free(bmp);
         }
-        CHECK(p_update(dev, bmp, 0x80) == 0, "updateBitmap(colour) -> 0");
-        free(bmp);
     }
 
     shm = OpenFileMappingW(FILE_MAP_READ, 0, L"Local\\GW2LCDShim");
@@ -147,16 +151,20 @@ int main(int argc, char** argv)
                 DWORD seq = rd32(sv + 24);
                 DWORD n = 4 + 160u * 43u;
                 unsigned char* bmp = (unsigned char*)malloc(n);
-                wr32(bmp, 1);
-                for (i = 0; i < 160 * 43; i++) bmp[4 + i] = (i & 1) ? 0xff : 0x00;
-                CHECK(p_update(dev, bmp, 0x80) == 0, "updateBitmap(mono) -> 0");
-                free(bmp);
-                CHECK(rd32(sv+8)==160 && rd32(sv+12)==43 && rd32(sv+16)==1,
-                      "shim mono 160x43x1");
-                CHECK(rd32(sv + 20) == 2, "shim active=2 (mono)");
-                CHECK(sv[48]==0x00 && sv[49]==0xff, "mono pixel copied (got %02x %02x)",
-                      sv[48], sv[49]);
-                CHECK(rd32(sv + 24) != seq, "sequence advanced");
+                if (!bmp) {
+                    CHECK(0, "malloc for mono frame failed");
+                } else {
+                    wr32(bmp, 1);
+                    for (i = 0; i < 160 * 43; i++) bmp[4 + i] = (i & 1) ? 0xff : 0x00;
+                    CHECK(p_update(dev, bmp, 0x80) == 0, "updateBitmap(mono) -> 0");
+                    free(bmp);
+                    CHECK(rd32(sv+8)==160 && rd32(sv+12)==43 && rd32(sv+16)==1,
+                          "shim mono 160x43x1");
+                    CHECK(rd32(sv + 20) == 2, "shim active=2 (mono)");
+                    CHECK(sv[48]==0x00 && sv[49]==0xff, "mono pixel copied (got %02x %02x)",
+                          sv[48], sv[49]);
+                    CHECK(rd32(sv + 24) != seq, "sequence advanced");
+                }
             }
             UnmapViewOfFile(sv);
         }

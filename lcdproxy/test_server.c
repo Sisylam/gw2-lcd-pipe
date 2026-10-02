@@ -37,6 +37,7 @@ static BOOL send_msg(HANDLE p, DWORD seq, DWORD type, DWORD len)
     unsigned char* buf = (unsigned char*)calloc(1, len);
     DWORD w = 0;
     BOOL ok;
+    if (!buf) return FALSE;
     memcpy(buf, &len, 4);
     memcpy(buf + 4, &seq, 4);
     memcpy(buf + 8, &type, 4);
@@ -64,7 +65,7 @@ static DWORD read_msg(HANDLE p, unsigned char* buf, DWORD cap, DWORD ms)
 int main(void)
 {
     HANDLE p;
-    unsigned char* buf = (unsigned char*)malloc(1 << 20);
+    unsigned char* buf;
     int replies = 0, bad = 0, i;
 
     p = CreateFileW(PIPE_NAME, GENERIC_READ | GENERIC_WRITE, 0, NULL,
@@ -75,6 +76,9 @@ int main(void)
         return 1;
     }
     CHECK(1, "connected to %ls", PIPE_NAME);
+
+    buf = (unsigned char*)malloc(1 << 20);
+    if (!buf) { printf("FAIL : out of memory\n"); CloseHandle(p); return 1; }
 
     /* Read one message at a time, not a coalesced byte stream. */
     {

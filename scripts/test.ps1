@@ -11,10 +11,18 @@
 
 $ErrorActionPreference = 'Stop'
 $root   = Split-Path -Parent $PSScriptRoot
-$env:PATH = 'C:\w64\bin;' + $env:PATH
-$gcc    = 'C:\w64\bin\gcc.exe'
-$cargo  = Join-Path $env:USERPROFILE '.cargo\bin\cargo.exe'
-$tmp    = Join-Path $env:TEMP 'gw2lcd-tests'
+if (Test-Path 'C:\w64\bin') { $env:PATH = 'C:\w64\bin;' + $env:PATH }
+
+function Find-Tool([string]$local, [string]$name) {
+    if ($local -and (Test-Path $local)) { return $local }
+    $c = Get-Command $name -ErrorAction SilentlyContinue
+    if ($c) { return $c.Source }
+    return $null
+}
+
+$gcc   = Find-Tool 'C:\w64\bin\gcc.exe' 'gcc'
+$cargo = Find-Tool (Join-Path $env:USERPROFILE '.cargo\bin\cargo.exe') 'cargo'
+$tmp   = Join-Path $env:TEMP 'gw2lcd-tests'
 New-Item -ItemType Directory -Force -Path $tmp | Out-Null
 
 $script:fail = 0

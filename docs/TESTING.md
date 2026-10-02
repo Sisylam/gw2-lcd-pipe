@@ -31,3 +31,21 @@ is 320x240 colour, while the G15/G510/G13 are 160x43 mono. The shim carries both
 - Anything requiring `LCore.exe` or the genuine Logitech DLLs.
 
 These are exercised manually, as recorded in `docs/PROTOCOL.md`.
+
+## Linting
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\lint.ps1
+```
+
+Runs `gcc -Wall -Wextra` over the C sources, `cppcheck`, `cargo clippy -- -D
+warnings`, and `cargo fmt -- --check`. cppcheck and the Rust tools are skipped
+with a notice if not installed.
+
+## CI
+
+- `.github/workflows/ci.yml` — on push/PR: installs MinGW, builds the server,
+  runs the tests and the linters on `windows-latest`.
+- `.github/workflows/codeql.yml` — CodeQL code scanning for C/C++, Rust and
+  Python (`build-mode: none`, so no build is required).
+

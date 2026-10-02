@@ -3,10 +3,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$env:PATH = 'C:\w64\bin;' + $env:PATH
+if (Test-Path 'C:\w64\bin') { $env:PATH = 'C:\w64\bin;' + $env:PATH }
+$gcc = if (Test-Path 'C:\w64\bin\gcc.exe') { 'C:\w64\bin\gcc.exe' } else { (Get-Command gcc).Source }
 $dir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location -LiteralPath $dir
-& 'C:\w64\bin\gcc.exe' -O2 -Wall -std=gnu99 -static-libgcc -o $Out 'lgpipe_server.c'
+& $gcc -O2 -Wall -std=gnu99 -static-libgcc -o $Out 'lgpipe_server.c'
 if ($LASTEXITCODE -ne 0) { throw "gcc failed with $LASTEXITCODE" }
 Get-Item -LiteralPath (Join-Path $dir $Out) |
     Select-Object Name, Length, LastWriteTime | Format-List

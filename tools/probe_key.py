@@ -22,12 +22,6 @@ def load_env(path=ENV_PATH):
     return out
 
 
-def mask(key):
-    if not key or len(key) < 12:
-        return "<missing or too short>"
-    return f"{key[:4]}...{key[-4:]} ({len(key)} chars)"
-
-
 def api_get(path, key):
     req = urllib.request.Request(
         "https://api.guildwars2.com" + path,
@@ -44,10 +38,12 @@ def api_get(path, key):
 
 env = load_env()
 key = env.get("GW2_API_KEY")
+has_key = bool(key)
 
+# Never log the key itself - only whether one is present.
 print(f".env found      : {ENV_PATH.exists()}")
 print(f".env path       : {ENV_PATH}")
-print(f"GW2_API_KEY     : {mask(key)}")
+print(f"GW2_API_KEY     : {'set' if has_key else 'not set'}")
 print()
 
 if not key:

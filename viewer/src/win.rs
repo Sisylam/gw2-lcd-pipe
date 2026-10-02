@@ -9,6 +9,8 @@
 
 use std::ffi::c_void;
 
+// Mirrors the Win32 type name on purpose.
+#[allow(clippy::upper_case_acronyms)]
 pub type HANDLE = *mut c_void;
 
 pub const FILE_MAP_READ: u32 = 0x0004;

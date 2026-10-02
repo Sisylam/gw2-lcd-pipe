@@ -133,7 +133,7 @@ fn draw_bar(buf: &mut [u32], buttons: &[Button], mouse: Option<(f32, f32)>) {
         *p = COLOR_BG;
     }
     for b in buttons {
-        let hot = mouse.map_or(false, |(mx, my)| {
+        let hot = mouse.is_some_and(|(mx, my)| {
             in_bar(mx, my) && mx >= b.x as f32 && mx < (b.x + BTN_W) as f32
         });
         let color = if hot { COLOR_BTN_HOT } else { COLOR_BTN };

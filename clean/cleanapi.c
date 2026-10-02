@@ -286,6 +286,7 @@ static DWORD WINAPI api_update_bitmap(int device, const void* bitmap, DWORD prio
 
 static DWORD WINAPI api_set_foreground(int device, int flag)
 {
+    (void)device; (void)flag;      /* only read by the debug log */
     dbglog("setfg dev=%d flag=%d\n", device, flag);
     return 0;
 }

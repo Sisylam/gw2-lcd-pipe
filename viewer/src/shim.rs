@@ -81,57 +81,13 @@ impl Shim {
         }
     }
 
-    fn u32_at(&self, off: usize) -> u32 {
-        let mut b = [0u8; 4];
-        unsafe {
-            std::ptr::copy_nonoverlapping(self.view.add(off), b.as_mut_ptr(), 4);
-        }
-        u32::from_le_bytes(b)
-    }
-
     /// Decode the current frame, or `None` if the section is not a valid shim.
     pub fn read(&mut self) -> Option<Frame> {
         if !self.is_open() {
             return None;
         }
-        let magic = self.u32_at(0);
-        let version = self.u32_at(4);
-        if magic != MAGIC || version != VERSION {
-            return None;
-        }
-        let width = self.u32_at(8);
-        let height = self.u32_at(12);
-        let bpp = self.u32_at(16);
-        let active = self.u32_at(20);
-        let sequence = self.u32_at(24);
-        let connected = self.u32_at(28);
-        let init_count = self.u32_at(32);
-        let text_count = self.u32_at(36);
-        let update_count = self.u32_at(40);
-
-        let mut f = Frame {
-            width,
-            height,
-            bpp,
-            active,
-            sequence,
-            connected,
-            init_count,
-            text_count,
-            update_count,
-            rgb: Vec::new(),
-            mono: Vec::new(),
-        };
-
-        let px = unsafe { self.view.add(HDR_SIZE) };
-        if active == 1 && width > 0 && height > 0 {
-            let n = (width as usize * height as usize * 3).min(MAX_PIXELS);
-            f.rgb = unsafe { std::slice::from_raw_parts(px, n) }.to_vec();
-        } else if active == 2 && width > 0 && height > 0 {
-            let n = width as usize * height as usize;
-            f.mono = unsafe { std::slice::from_raw_parts(px, n) }.to_vec();
-        }
-        Some(f)
+        let view = unsafe { std::slice::from_raw_parts(self.view, HDR_SIZE + MAX_PIXELS) };
+        parse(view)
     }
 
     /// True once per new frame, keyed on the sequence counter.
@@ -147,5 +103,113 @@ impl Shim {
 impl Drop for Shim {
     fn drop(&mut self) {
         self.close();
+    }
+}
+
+/// Decode a shim view. Pure, so it can be unit-tested without a mapping.
+fn parse(view: &[u8]) -> Option<Frame> {
+    if view.len() < HDR_SIZE {
+        return None;
+    }
+    let u32_at = |off: usize| {
+        u32::from_le_bytes([view[off], view[off + 1], view[off + 2], view[off + 3]])
+    };
+    if u32_at(0) != MAGIC || u32_at(4) != VERSION {
+        return None;
+    }
+
+    let width = u32_at(8);
+    let height = u32_at(12);
+    let bpp = u32_at(16);
+    let active = u32_at(20);
+    let sequence = u32_at(24);
+    let connected = u32_at(28);
+    let init_count = u32_at(32);
+    let text_count = u32_at(36);
+    let update_count = u32_at(40);
+
+    let mut f = Frame {
+        width,
+        height,
+        bpp,
+        active,
+        sequence,
+        connected,
+        init_count,
+        text_count,
+        update_count,
+        rgb: Vec::new(),
+        mono: Vec::new(),
+    };
+
+    let px = &view[HDR_SIZE..];
+    if active == 1 && width > 0 && height > 0 {
+        let n = (width as usize * height as usize * 3)
+            .min(MAX_PIXELS)
+            .min(px.len());
+        f.rgb = px[..n].to_vec();
+    } else if active == 2 && width > 0 && height > 0 {
+        let n = (width as usize * height as usize).min(px.len());
+        f.mono = px[..n].to_vec();
+    }
+    Some(f)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn buf(magic: u32, ver: u32, w: u32, h: u32, bpp: u32, active: u32) -> Vec<u8> {
+        let mut v = vec![0u8; HDR_SIZE + MAX_PIXELS];
+        v[0..4].copy_from_slice(&magic.to_le_bytes());
+        v[4..8].copy_from_slice(&ver.to_le_bytes());
+        v[8..12].copy_from_slice(&w.to_le_bytes());
+        v[12..16].copy_from_slice(&h.to_le_bytes());
+        v[16..20].copy_from_slice(&bpp.to_le_bytes());
+        v[20..24].copy_from_slice(&active.to_le_bytes());
+        v
+    }
+
+    #[test]
+    fn rejects_wrong_magic_or_version() {
+        assert!(parse(&buf(0, VERSION, 320, 240, 24, 1)).is_none());
+        assert!(parse(&buf(MAGIC, 99, 320, 240, 24, 1)).is_none());
+    }
+
+    #[test]
+    fn rejects_short_buffer() {
+        assert!(parse(&[0u8; 8]).is_none());
+    }
+
+    #[test]
+    fn parses_colour_frame() {
+        let mut v = buf(MAGIC, VERSION, 320, 240, 24, 1);
+        v[HDR_SIZE] = 0x30;
+        v[HDR_SIZE + 1] = 0x20;
+        v[HDR_SIZE + 2] = 0x10;
+        let f = parse(&v).expect("colour frame");
+        assert_eq!((f.width, f.height, f.bpp, f.active), (320, 240, 24, 1));
+        assert_eq!(f.rgb.len(), 320 * 240 * 3);
+        assert_eq!(&f.rgb[..3], &[0x30, 0x20, 0x10]);
+        assert!(f.mono.is_empty());
+    }
+
+    #[test]
+    fn parses_mono_frame() {
+        let mut v = buf(MAGIC, VERSION, 160, 43, 1, 2);
+        v[HDR_SIZE] = 0xff;
+        let f = parse(&v).expect("mono frame");
+        assert_eq!((f.width, f.height, f.active), (160, 43, 2));
+        assert_eq!(f.mono.len(), 160 * 43);
+        assert_eq!(f.mono[0], 0xff);
+        assert!(f.rgb.is_empty());
+    }
+
+    #[test]
+    fn zero_size_parses_without_pixels() {
+        let v = buf(MAGIC, VERSION, 0, 0, 0, 1);
+        let f = parse(&v).expect("header is valid");
+        assert!(f.rgb.is_empty());
+        assert!(f.mono.is_empty());
     }
 }

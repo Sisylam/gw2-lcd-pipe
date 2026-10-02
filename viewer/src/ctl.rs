@@ -80,3 +80,35 @@ pub fn post(button: u32) -> Result<(), String> {
     m.close();
     result
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn button_bits_match_the_protocol() {
+        assert_eq!(BTN_PREV, 0x0100);
+        assert_eq!(BTN_NEXT, 0x0200);
+        assert_eq!(BTN_OK, 0x0400);
+        assert_eq!(BTN_UP, 0x1000);
+        assert_eq!(BTN_DOWN, 0x2000);
+        assert_eq!(BTN_MENU, 0x4000);
+    }
+
+    #[test]
+    fn names_are_stable() {
+        assert_eq!(name(BTN_PREV), "<");
+        assert_eq!(name(BTN_NEXT), ">");
+        assert_eq!(name(BTN_OK), "ok");
+        assert_eq!(name(BTN_UP), "^");
+        assert_eq!(name(BTN_DOWN), "v");
+        assert_eq!(name(BTN_MENU), "menu");
+        assert_eq!(name(0), "?");
+    }
+
+    #[test]
+    fn control_channel_layout() {
+        assert_eq!(CTL_MAGIC, 0x3154_4347); // "GCT1"
+        assert_eq!(CTL_BYTES, 32);
+    }
+}

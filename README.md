@@ -33,6 +33,8 @@ See `docs/PROTOCOL.md` for the full protocol notes, history and open items.
 | `lcdshim.py` | Python shared-memory reader, used only by `shim/test_shim.py`. |
 | `docs/PROTOCOL.md` | Full protocol notes, reverse-engineering history and open items. |
 | `docs/INTEROP.md` | How the protocol was derived (black-box) and the project's legal posture. |
+| `docs/TESTING.md` | What the automated tests cover. |
+| `scripts/` | Test runner (`test.ps1`). |
 | `LICENSE`, `THIRD_PARTY_NOTICES.md` | MIT license and third-party attributions. |
 | `third_party/logitech/` | Genuine Logitech DLLs the project depends on. **Not committed** — see its README. |
 | `reference/` | GW2 LCD screen renders used during analysis - **unverified provenance**, see `reference/README.md`. |
@@ -79,6 +81,15 @@ powershell -ExecutionPolicy Bypass -File viewer\build.ps1
 ```
 
 Before running the proxy, populate `third_party/logitech/` (see its README).
+
+## Testing
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\test.ps1
+```
+
+Runs the client-DLL integration test, the viewer unit tests, and the server mock
+test. See `docs/TESTING.md` for what is and is not covered.
 
 ## Running
 

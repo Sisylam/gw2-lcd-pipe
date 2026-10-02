@@ -542,15 +542,54 @@ runtime.
   so `Remove-Item` silently fails and the log keeps its old contents. Truncate
   or rename it instead, or just note the byte offset.
 
+## Client API surface - which `GetInterface(5)` functions GW2 calls
+
+Recovered empirically on 2026-10-02 by wrapping the real `GetInterface(5)`
+table (instrumented proxy build: `build.ps1 -Wrap` -> `WRAP_TABLE`). The
+wrapper copies the real table and swaps every entry that points into
+`LgLcdApi.dll`'s own image for a logging thunk, preserving non-code entries,
+so the game still sees a well-formed table.
+
+- `GetInterface(5)` is called **once**; GW2 caches the returned table.
+- The table holds **29 code pointers** (`T[00]`-`T[28]`). `T[29]` is `0` and
+  `T[30]`/`T[31]` are adjacent `.rdata` bytes (`".?AVCPip..."`), not part of
+  the struct.
+- GW2 calls exactly **five** slots:
+
+| Slot | Identity | Evidence |
+|-----:|----------|----------|
+| 0 | `lgLcdInit` | first call, before any pipe traffic |
+| 4 | `lgLcdConnectEx` | arg is a context pointer; triggers `CreateFileW` on `LGLCDPIPE` + the 1084-byte handshake |
+| 26 | `lgLcdOpen(ByType)` | context pointer; followed by the 16-byte `0x0803` open message |
+| 24 | `lgLcdSetAsLCDForegroundApp` | `device=0x65`, `flag=0` then `1`; 20-byte `0x0830` message whose last byte is the flag |
+| 13 | `lgLcdUpdateBitmap` | `device=0x65`, `bitmap=0x20655ce8f40`, `priority=0x80`; each call is followed by a 307224-byte frame write (13 calls = 13 frames) |
+
+- Device handle is **`0x65` (101)**; GW2 reuses one bitmap buffer.
+- `lgLcdReadSoftButtons` is **never called**: GW2 registers the
+  `onSoftbuttonsChanged` callback through the open context instead (605
+  background 560-byte reads, no matching `ReadSoftButtons` call).
+- Pressing all six soft buttons delivered `0x0702` notifications (bits
+  `0x100/0x200/0x400/0x1000/0x2000/0x4000`, each followed by a `0` release) but
+  produced **no additional interface calls** - GW2 drives button handling
+  entirely through the callback.
+- The struct order does **not** match the flat-export order in the public
+  `lglcd.h`, and no public mirror defines the version-5 struct (grep.app and
+  WebSearch return zero hits for `lgLcdInterface` or the `*Func` typedefs).
+
+Implication for a clean-room client DLL: only those five slots need real
+implementations (init / connect / open / updateBitmap / setForeground); the
+other 24 can be success-returning stubs, because GW2 never calls them. The
+public `lglcd.h` (shipped in `mpc-hc`, `MPC-BE`, `mumble`) supplies every
+signature and constant.
+
 ## Remaining work
 
 1. ~~Confirm the buttons visually.~~ **DONE 2026-10-02**: all six bits confirmed
    through the viewer; `[<]`/`[>]` cycle GW2's screens with LCore stopped, the
    other four have no visible effect.
-2. **Deploy the third-party-loading proxy.** `LgLcdApiProxy.thirdparty.dll` is
-   built (loads `LgLcdApi.dll` from `..\third_party\logitech\`, falling back to
-   Program Files). Copy it over the active `LgLcdApiProxy.dll` and restart GW2
-   to verify. The observation build is currently active.
+2. ~~Deploy the third-party-loading proxy.~~ **DONE 2026-10-02**: the active
+   `LgLcdApiProxy.dll` loads `LgLcdApi.dll` from `..\third_party\logitech\`
+   (falling back to Program Files); confirmed in the log (`real dll: ...`).
 3. Consider tuning `LGLCD_IDLE_MS`. The idle timer is **required** (removing it
    wedges GW2 on a loading screen), but 200ms may be faster than LCore's sparser
    keepalives.
@@ -560,6 +599,10 @@ runtime.
    string) and enable/test HVCI.
 6. Parallel fallback stack (`main.py`, `mumble.py`, `gw2api.py`, `render.py`)
    still has 404s on `/v2/maps/{id}/poi` and `/v2/maps/{id}/vista`.
+7. **Clean-room client DLL (optional).** A replacement for `LgLcdApi.dll`
+   would drop the Logitech DLL dependency entirely. See the client-API section
+   above: only five functions need real implementations, reusing the existing
+   shim/control code.
 
 ## Known protocol gaps
 

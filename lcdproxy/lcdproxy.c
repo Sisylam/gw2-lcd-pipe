@@ -689,6 +689,107 @@ static void install_hooks(void)
     }
 }
 
+#ifdef WRAP_TABLE
+/*
+ * --- GetInterface() table wrapping: which client-API calls does GW2 make? ---
+ *
+ * The header that defines the struct returned by GetInterface() (the SDK's
+ * LgLcdApi.h) is not publicly mirrored, so we recover the interface shape
+ * empirically instead of guessing offsets. We copy the real table, replace
+ * every entry that is a pointer into the real DLL's own image with a logging
+ * wrapper, and hand the copy back. Non-code entries - a leading version DWORD,
+ * padding, anything that is not a pointer into LgLcdApi.dll - are preserved
+ * verbatim, so the game still sees a well-formed table no matter the layout.
+ *
+ * Every lgLcd* function takes at most three integer/pointer arguments and
+ * returns a DWORD (see the public SDK header lglcd.h), so one generic
+ * four-argument wrapper per slot is ABI-safe on x64: the fifth and later
+ * argument slots are never used by this API, and there are no float args.
+ */
+#define NWRAP 32
+
+static void* g_real_table[NWRAP];
+static void* g_wrapped[NWRAP];
+static int   g_wrapped_ready;
+
+typedef uint64_t (*gen_fn)(uint64_t, uint64_t, uint64_t, uint64_t);
+
+static uint64_t wrap_call(int idx, uint64_t a, uint64_t b, uint64_t c, uint64_t d)
+{
+    logline("CALL[%02d] a=%llx b=%llx c=%llx d=%llx\n", idx,
+            (unsigned long long)a, (unsigned long long)b,
+            (unsigned long long)c, (unsigned long long)d);
+    return ((gen_fn)g_real_table[idx])(a, b, c, d);
+}
+
+#define WRAP_DEF(n) \
+    static uint64_t wrap_##n(uint64_t a, uint64_t b, uint64_t c, uint64_t d) \
+    { return wrap_call(n, a, b, c, d); }
+WRAP_DEF(0)  WRAP_DEF(1)  WRAP_DEF(2)  WRAP_DEF(3)
+WRAP_DEF(4)  WRAP_DEF(5)  WRAP_DEF(6)  WRAP_DEF(7)
+WRAP_DEF(8)  WRAP_DEF(9)  WRAP_DEF(10) WRAP_DEF(11)
+WRAP_DEF(12) WRAP_DEF(13) WRAP_DEF(14) WRAP_DEF(15)
+WRAP_DEF(16) WRAP_DEF(17) WRAP_DEF(18) WRAP_DEF(19)
+WRAP_DEF(20) WRAP_DEF(21) WRAP_DEF(22) WRAP_DEF(23)
+WRAP_DEF(24) WRAP_DEF(25) WRAP_DEF(26) WRAP_DEF(27)
+WRAP_DEF(28) WRAP_DEF(29) WRAP_DEF(30) WRAP_DEF(31)
+
+static void* g_thunks[NWRAP] = {
+    (void*)wrap_0,  (void*)wrap_1,  (void*)wrap_2,  (void*)wrap_3,
+    (void*)wrap_4,  (void*)wrap_5,  (void*)wrap_6,  (void*)wrap_7,
+    (void*)wrap_8,  (void*)wrap_9,  (void*)wrap_10, (void*)wrap_11,
+    (void*)wrap_12, (void*)wrap_13, (void*)wrap_14, (void*)wrap_15,
+    (void*)wrap_16, (void*)wrap_17, (void*)wrap_18, (void*)wrap_19,
+    (void*)wrap_20, (void*)wrap_21, (void*)wrap_22, (void*)wrap_23,
+    (void*)wrap_24, (void*)wrap_25, (void*)wrap_26, (void*)wrap_27,
+    (void*)wrap_28, (void*)wrap_29, (void*)wrap_30, (void*)wrap_31,
+};
+
+/* The real table may be shorter than NWRAP; never read past a mapped page. */
+static int range_readable(const void* p, size_t n)
+{
+    MEMORY_BASIC_INFORMATION mbi;
+    if (!VirtualQuery(p, &mbi, sizeof(mbi))) return 0;
+    if (mbi.State != MEM_COMMIT) return 0;
+    if (mbi.Protect & (PAGE_NOACCESS | PAGE_GUARD)) return 0;
+    return (const BYTE*)p + n <= (const BYTE*)mbi.BaseAddress + mbi.RegionSize;
+}
+
+static int in_real_image(const void* p)
+{
+    BYTE* base = (BYTE*)g_real;
+    IMAGE_DOS_HEADER*   dos;
+    IMAGE_NT_HEADERS64* nt;
+    if (!g_real || !p) return 0;
+    dos = (IMAGE_DOS_HEADER*)base;
+    if (dos->e_magic != IMAGE_DOS_SIGNATURE) return 0;
+    nt = (IMAGE_NT_HEADERS64*)(base + dos->e_lfanew);
+    if (nt->Signature != IMAGE_NT_SIGNATURE) return 0;
+    return (const BYTE*)p >= base &&
+           (const BYTE*)p < base + nt->OptionalHeader.SizeOfImage;
+}
+
+static void* wrap_table(void* t)
+{
+    void** tab = (void**)t;
+    if (!g_wrapped_ready) {
+        for (int i = 0; i < NWRAP; i++) {
+            int code;
+            if (!range_readable(&tab[i], sizeof(void*))) {
+                logline("T[%02d] unreadable - stop\n", i);
+                break;
+            }
+            g_real_table[i] = tab[i];
+            code = in_real_image(tab[i]);
+            g_wrapped[i] = code ? g_thunks[i] : tab[i];
+            logline("T[%02d]=%p%s\n", i, tab[i], code ? "  <- code" : "");
+        }
+        g_wrapped_ready = 1;
+    }
+    return g_wrapped;
+}
+#endif /* WRAP_TABLE */
+
 __declspec(dllexport) void* __stdcall GetInterface(int version)
 {
     if (version < 1 || version > 5) return NULL;
@@ -713,6 +814,14 @@ __declspec(dllexport) void* __stdcall GetInterface(int version)
 
     void* t = g_real_gi(version);
     g_tables[version] = t;
+#ifdef WRAP_TABLE
+    /* Instrumented build: hand back a copy whose code pointers log first. */
+    if (t && version == 5) {
+        void* w = wrap_table(t);
+        logline("GetInterface(%d) -> %p (WRAPPED)\n", version, w);
+        return w;
+    }
+#endif
     /* the real table is handed back untouched */
     logline("GetInterface(%d) -> %p (pass-through)\n", version, t);
     return t;

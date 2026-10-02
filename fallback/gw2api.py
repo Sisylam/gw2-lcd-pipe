@@ -6,8 +6,8 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta
 
-ENV_PATH = Path(__file__).parent / ".env"
-CACHE_DIR = Path(__file__).parent / "cache"
+ENV_PATH = Path(__file__).resolve().parent.parent / ".env"   # repo root
+CACHE_DIR = Path(__file__).resolve().parent.parent / "cache"  # repo root
 
 
 def _load_env():

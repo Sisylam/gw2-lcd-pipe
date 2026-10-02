@@ -1,12 +1,14 @@
 """End-to-end test of the shim: load it, drive it like GW2 would, read the frame back."""
 import ctypes
+import os
 import sys
 import time
 
-sys.path.insert(0, r"R:\SYSTEM\Users\Sisyphos\Documents\Default Project")
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
 import lcdshim
 
-DLL = r"R:\SYSTEM\Users\Sisyphos\Documents\Default Project\shim\LogitechLcd.dll"
+DLL = os.path.join(HERE, "LogitechLcd.dll")
 
 d = ctypes.WinDLL(DLL)
 print("loaded", DLL)

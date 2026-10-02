@@ -496,7 +496,7 @@ logs, and - for copyright reasons - the Logitech binaries under
 `third_party/logitech/`. `third_party/logitech/README.md` explains how to
 populate that folder.
 
-`viewer/` is a **native Rust replacement for `view_shim.py` + `lcdshim.py`**
+`viewer/` is a **native Rust replacement for the Python viewer and its `lcdshim.py` reader**
 (built with `viewer\build.ps1` to `viewer\target\release\gw2lcd-viewer.exe`).
 It reads `Local\GW2LCDShim` and drives the six buttons through `Local\LGLCDCtl`.
 The Python files are kept only for reference and are no longer needed at
@@ -608,7 +608,7 @@ buttons, with no Logitech DLL and no server). Two extra findings from that work:
    is not LGS, so it can stay.
 5. Once stable: uninstall LGS 9.04.28 (interactive only, no quiet/modify
    string) and enable/test HVCI.
-6. Parallel fallback stack (`main.py`, `mumble.py`, `gw2api.py`, `render.py`)
+6. Parallel fallback stack (`fallback/`)
    still has 404s on `/v2/maps/{id}/poi` and `/v2/maps/{id}/vista`.
 7. ~~Clean-room client DLL.~~ **DONE 2026-10-02**: `clean/` replaces
    `LgLcdApi.dll` and `LCore.exe`; GW2 shows live frames and all six buttons
@@ -692,7 +692,7 @@ All under `R:\SYSTEM\Users\Sisyphos\Documents\Default Project\`.
 | `lcdproxy\build-server.ps1` | server build script |
 | `lcdproxy\registry.ps1` | registry status/restore; `registry-backup.json` is stock |
 | `lcdproxy\lgpipe_server.log` | server diagnostics (gitignored) |
-| `lcdshim.py` | Python shared-memory reader, used only by `shim\test_shim.py`; the viewer has its own Rust reader |
+| `shim\lcdshim.py` | Python shared-memory reader, used only by `shim\test_shim.py`; the viewer has its own Rust reader |
 | `viewer\` | native Rust viewer: `src\main.rs`, `src\shim.rs`, `src\ctl.rs`, `src\win.rs`, `build.ps1` |
 | `third_party\logitech\` | genuine Logitech DLLs (gitignored) + README |
 | `README.md`, `.gitignore` | repo overview and exclusion rules |
@@ -702,6 +702,6 @@ All under `R:\SYSTEM\Users\Sisyphos\Documents\Default Project\`.
 | `%TEMP%\opencode\payloads\` | reply dumps + `stream_0_1ef0.bin` |
 | `%TEMP%\opencode\lcore_baseline.txt` | saved LCore PID/command line |
 | `S:\Programme\Guild Wars 2\Crash.dmp` | capture-build crash dump |
-| `main.py`, `mumble.py`, `gw2api.py`, `render.py` | parallel fallback stack |
+| `fallback\` | parallel fallback stack (unused) |
 
 **Never expose `.env`** in the project root.

@@ -5,7 +5,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-ENV_PATH = Path(__file__).parent / ".env"
+ENV_PATH = Path(__file__).resolve().parent.parent / ".env"   # repo root
 
 
 def load_env(path=ENV_PATH):

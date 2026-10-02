@@ -33,12 +33,13 @@ See `docs/PROTOCOL.md` for the full protocol notes, history and open items.
 | `lcdproxy/` | The replacement named-pipe server (`lgpipe_server.c`) and the passive proxy DLL (`lcdproxy.c`) that taps GW2's frames. |
 | `clean/` | **Clean-room client DLL** (`LgLcdApi.clean.dll`): replaces `LgLcdApi.dll` **and** `LCore.exe`. No Logitech binary, no server. See `clean/README.md`. |
 | `viewer/` | **Native Rust viewer** (`gw2lcd-viewer.exe`): shows `Local\GW2LCDShim` and provides the six soft buttons. Replaces the Python viewer. |
-| `shim/` | Alternative approach: a shim for the legacy `LogiLcd*` API. |
-| `lcdshim.py` | Python shared-memory reader, used only by `shim/test_shim.py`. |
+| `shim/` | Alternative approach: a shim for the legacy `LogiLcd*` API, plus its Python reader (`lcdshim.py`). |
+| `tools/` | Throwaway probe scripts (MumbleLink, GW2 API) used during development - see `tools/README.md`. |
+| `fallback/` | Earlier, unused Python stack (MumbleLink + API -> Tk) - see `fallback/README.md`. |
 | `docs/PROTOCOL.md` | Full protocol notes, reverse-engineering history and open items. |
 | `docs/INTEROP.md` | How the protocol was derived (black-box) and the project's legal posture. |
 | `docs/TESTING.md` | What the automated tests cover. |
-| `scripts/` | Test runner (`test.ps1`). |
+| `scripts/` | Test and lint runners (`test.ps1`, `lint.ps1`). |
 | `LICENSE`, `THIRD_PARTY_NOTICES.md` | MIT license and third-party attributions. |
 | `third_party/logitech/` | Genuine Logitech DLLs the project depends on. **Not committed** — see its README. |
 | `reference/` | GW2 LCD screen renders used during analysis - **unverified provenance**, see `reference/README.md`. |

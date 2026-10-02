@@ -371,7 +371,7 @@ static void note_write(HANDLE h, const void* buf, DWORD n)
         if (do_dump) {
             ensure_dump_dir();
             char nm[64];
-            _snprintf(nm, sizeof(nm), "payload_%u.bin", n);
+            _snprintf(nm, sizeof(nm), "payload_%u.bin", (unsigned)n);
             WCHAR p[MAX_PATH];
             make_wpath(p, MAX_PATH, DUMP_DIR, nm);
             HANDLE f = CreateFileW(p, GENERIC_WRITE, FILE_SHARE_READ, NULL,
@@ -502,7 +502,7 @@ static void WINAPI read_cb(DWORD a1, DWORD a2, LPOVERLAPPED a3)
         if (r <= 64) {
             char nm[96];
             WCHAR wpath[MAX_PATH];
-            _snprintf(nm, sizeof(nm), "read_%03ld_%u.bin", r, got);
+            _snprintf(nm, sizeof(nm), "read_%03ld_%u.bin", r, (unsigned)got);
             make_wpath(wpath, MAX_PATH, DUMP_DIR, nm);
             HANDLE f = CreateFileW(wpath, GENERIC_WRITE, FILE_SHARE_READ,
                                    NULL, CREATE_ALWAYS,

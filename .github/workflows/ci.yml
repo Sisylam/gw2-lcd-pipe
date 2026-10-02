@@ -10,10 +10,10 @@ jobs:
   test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Install MinGW (gcc)
-        run: choco install mingw --no-progress -y
+      - name: Install MinGW (gcc) and cppcheck
+        run: choco install mingw cppcheck --no-progress -y
 
       - name: Add Rust linter components
         run: rustup component add clippy rustfmt

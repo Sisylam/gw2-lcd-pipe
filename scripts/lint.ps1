@@ -21,6 +21,15 @@ $gcc = Find-Tool 'C:\w64\bin\gcc.exe' 'gcc'
 $cppcheck = Find-Tool 'C:\Program Files\Cppcheck\cppcheck.exe' 'cppcheck'
 $cargo = Find-Tool (Join-Path $env:USERPROFILE '.cargo\bin\cargo.exe') 'cargo'
 
+# GCC 8+ warns about FARPROC -> function-pointer casts; they are inherent to
+# GetProcAddress, so silence only that, and only where the flag exists.
+$gccExtra = @()
+if ($gcc) {
+    $major = 0
+    try { $major = [int](((& $gcc -dumpversion) -join '') -replace '\..*$', '') } catch { }
+    if ($major -ge 8) { $gccExtra += '-Wno-cast-function-type' }
+}
+
 $script:fail = 0
 function Step([string]$name, [scriptblock]$body) {
     Write-Host "`n=== $name ==="
@@ -38,17 +47,24 @@ Step 'C: gcc -Wall -Wextra' {
     if (-not $gcc) { throw 'gcc not found' }
     foreach ($f in $cFiles) {
         Write-Host "-- $(Split-Path -Leaf $f)"
-        & $gcc -fsyntax-only -std=gnu99 -Wall -Wextra $f
+        & $gcc -fsyntax-only -std=gnu99 -Wall -Wextra @gccExtra $f
         if ($LASTEXITCODE -ne 0) { throw "gcc reported problems in $(Split-Path -Leaf $f)" }
     }
 }
 
 Step 'C: cppcheck' {
     if (-not $cppcheck) { Write-Host 'cppcheck not installed - skipped'; return }
-    & $cppcheck --enable=warning,performance,portability --std=c99 `
+    $out = & $cppcheck --enable=warning,performance,portability --std=c99 `
         --suppress=missingIncludeSystem --inline-suppr --error-exitcode=1 `
-        --template='{file}:{line}: {severity}: {message} [{id}]' $cFiles
-    if ($LASTEXITCODE -ne 0) { throw "cppcheck findings (exit $LASTEXITCODE)" }
+        --template='{file}:{line}: {severity}: {message} [{id}]' $cFiles 2>&1
+    $code = $LASTEXITCODE
+    $out | ForEach-Object { Write-Host $_ }
+    # Some bundled cppcheck builds (e.g. winlibs) ship without std.cfg.
+    if (($out | Out-String) -match 'Failed to load|installation is broken') {
+        Write-Host 'cppcheck installation is broken (missing std.cfg) - skipped'
+        return
+    }
+    if ($code -ne 0) { throw "cppcheck findings (exit $code)" }
 }
 
 Step 'Rust: clippy' {

@@ -452,7 +452,7 @@ static BOOL write_msg(HANDLE pipe, const DWORD *words, DWORD nwords,
      * reconstruct it from log ordering afterwards is exactly the slow part.
      * Recorded separately so it survives log truncation.
      */
-    _snprintf(g_last_sent, sizeof(g_last_sent), "inst%ld %s %uB %s", id, what, n, hex);
+    _snprintf(g_last_sent, sizeof(g_last_sent), "inst%ld %s %uB %s", id, what, (unsigned)n, hex);
     InterlockedExchangeAdd(&g_sent_total, 1);
     return TRUE;
 }
